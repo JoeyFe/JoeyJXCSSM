@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.joey.dao.SellBackDao">
+<resultMap id="sellBackResultMap" type="cn.joey.entity.SellBack">
+		<id column="s_id" property="id" />
+		<result column="s_money" property="money" />
+		<result column="s_productNum" property="productNum" />
+		<result column="s_payType" property="payType" />
+		<result column="s_status" property="status" />
+		<result column="s_operator" property="operator" />
+		<result column="s_remark" property="remark" />
+		<result column="s_createTime" property="createTime" />
+		<result column="s_sellOutId" property="sellOutId" />
+		<collection property="sellBackDetailList" ofType="cn.joey.entity.SellBackDetail">
+			<id column="sd_id" property="id" />
+			<result column="sd_sellBackId" property="sellBackId" />
+			<result column="sd_productName" property="productName" />
+			<result column="sd_price" property="price" />
+			<result column="sd_productNum" property="productNum" />
+			<result column="sd_money" property="money" />
+			<result column="sd_pid" property="pid" />
+		</collection>
+	</resultMap>
+	<!-- 销售出库单插入操作 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="cn.joey.entity.SellBack">
+		insert into sell_back(id,money,productNum,payType,status,operator,remark,createTime,sellOutId) values(#{id},#{money},#{productNum},#{payType},#{status},#{operator},#{remark},#{createTime},#{sellOutId})
+	</insert>
+	<!-- 销售出库单子项添加操作 -->
+	<insert id="addDetail" parameterType="cn.joey.entity.SellBackDetail">
+		insert into sell_back_detail(id,sellBackId,productName,price,productNum,money,pid) values(null,#{sellBackId},#{productName},#{price},#{productNum},#{money},#{pid})
+	</insert>
+	<!-- 销售出库单编辑状态操作 -->
+	<update id="edit" parameterType="cn.joey.entity.SellBack">
+		update sell_back set status = #{status} where id = #{id}
+	</update>
+	<!-- 销售出库单信息搜索查询 -->
+	<select id="findList" parameterType="Map" resultMap="sellBackResultMap">
+		select 
+		s.id as s_id,s.money as s_money,s.productNum as s_productNum,s.payType as s_payType,s.status as s_status,s.operator as s_operator,s.remark as s_remark,s.createTime as s_createTime,s.sellOutId as s_sellOutId,
+		sd.id as sd_id,sd.sellBackId as sd_sellBackId,sd.money as sd_money,sd.productName as sd_productName,sd.price as sd_price,sd.productNum as sd_productNum,sd.pid as sd_pid  
+		from sell_back s,sell_back_detail sd 
+		where s.id = sd.sellBackId 
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%' 
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+		<if test="offset != null and pageSize != null">
+			limit #{offset},#{pageSize}
+		</if>
+	</select>
+	<!-- 模糊搜索总条数 -->
+	<select id="getTotal" parameterType="Map" resultType="Integer">
+		select count(*) from sell_back where 1=1  
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%'
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+	</select>
+	<!-- 删除销售出库单信息 -->
+	<delete id="delete" parameterType="String">
+		delete from sell_back where id = #{value}
+	</delete>
+</mapper>

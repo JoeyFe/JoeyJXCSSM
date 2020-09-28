@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.joey.dao.PurchaseInDao">
+<resultMap id="purchaseInResultMap" type="cn.joey.entity.PurchaseIn">
+		<id column="p_id" property="id" />
+		<result column="p_money" property="money" />
+		<result column="p_productNum" property="productNum" />
+		<result column="p_payType" property="payType" />
+		<result column="p_status" property="status" />
+		<result column="p_operator" property="operator" />
+		<result column="p_remark" property="remark" />
+		<result column="p_createTime" property="createTime" />
+		<result column="p_orderInId" property="orderInId" />
+		<collection property="purchaseInDetailList" ofType="cn.joey.entity.PurchaseInDetail">
+			<id column="pd_id" property="id" />
+			<result column="pd_purchaseInId" property="purchaseInId" />
+			<result column="pd_productName" property="productName" />
+			<result column="pd_price" property="price" />
+			<result column="pd_productNum" property="productNum" />
+			<result column="pd_money" property="money" />
+			<result column="pd_pid" property="pid" />
+		</collection>
+	</resultMap>
+	<!-- 采购单插入操作 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="cn.joey.entity.PurchaseIn">
+		insert into purchase_in(id,money,productNum,payType,status,operator,remark,createTime,orderInId) values(#{id},#{money},#{productNum},#{payType},#{status},#{operator},#{remark},#{createTime},#{orderInId})
+	</insert>
+	<!-- 进货单子项添加操作 -->
+	<insert id="addDetail" parameterType="cn.joey.entity.PurchaseInDetail">
+		insert into purchase_in_detail(id,purchaseInId,productName,price,productNum,money,pid) values(null,#{purchaseInId},#{productName},#{price},#{productNum},#{money},#{pid})
+	</insert>
+	<!-- 采购单编辑状态操作 -->
+	<update id="edit" parameterType="cn.joey.entity.PurchaseIn">
+		update purchase_in set money = #{money},productNum = #{productNum},payType = #{payType},status = #{status},operator = #{operator},remark = #{remark} where id = #{id}
+	</update>
+	<!-- 采购单信息搜索查询 -->
+	<select id="findList" parameterType="Map" resultMap="purchaseInResultMap">
+		select 
+		p.id as p_id,p.money as p_money,p.productNum as p_productNum,p.payType as p_payType,p.status as p_status,p.operator as p_operator,p.remark as p_remark,p.createTime as p_createTime,p.orderInId as p_orderInId,
+		pd.id as pd_id,pd.purchaseInId as pd_purchaseInId,pd.money as pd_money,pd.productName as pd_productName,pd.price as pd_price,pd.productNum as pd_productNum,pd.pid as pd_pid  
+		from purchase_in p,purchase_in_detail pd 
+		where p.id = pd.purchaseInId 
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%' 
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+		<if test="offset != null and pageSize != null">
+			limit #{offset},#{pageSize}
+		</if>
+	</select>
+	<!-- 模糊搜索总条数 -->
+	<select id="getTotal" parameterType="Map" resultType="Integer">
+		select count(*) from purchase_in where 1=1  
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%'
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+	</select>
+	<!-- 删除采购单信息 -->
+	<delete id="delete" parameterType="String">
+		delete from purchase_in where id = #{value}
+	</delete>
+</mapper>

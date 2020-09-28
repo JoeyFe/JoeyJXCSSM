@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.joey.dao.StockInDao">
+<resultMap id="stockInResultMap" type="cn.joey.entity.StockIn">
+		<id column="s_id" property="id" />
+		<result column="s_money" property="money" />
+		<result column="s_productNum" property="productNum" />
+		<result column="s_payType" property="payType" />
+		<result column="s_status" property="status" />
+		<result column="s_operator" property="operator" />
+		<result column="s_remark" property="remark" />
+		<result column="s_createTime" property="createTime" />
+		<result column="s_purchaseInId" property="purchaseInId" />
+		<collection property="stockInDetailList" ofType="cn.joey.entity.StockInDetail">
+			<id column="sd_id" property="id" />
+			<result column="sd_stockInId" property="stockInId" />
+			<result column="sd_productName" property="productName" />
+			<result column="sd_price" property="price" />
+			<result column="sd_productNum" property="productNum" />
+			<result column="sd_money" property="money" />
+			<result column="sd_pid" property="pid" />
+		</collection>
+	</resultMap>
+	<!-- 采购单插入操作 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="cn.joey.entity.StockIn">
+		insert into stock_in(id,money,productNum,payType,status,operator,remark,createTime,purchaseInId) values(#{id},#{money},#{productNum},#{payType},#{status},#{operator},#{remark},#{createTime},#{purchaseInId})
+	</insert>
+	<!-- 进货单子项添加操作 -->
+	<insert id="addDetail" parameterType="cn.joey.entity.StockInDetail">
+		insert into stock_in_detail(id,stockInId,productName,price,productNum,money,pid) values(null,#{stockInId},#{productName},#{price},#{productNum},#{money},#{pid})
+	</insert>
+	<!-- 采购单编辑状态操作 -->
+	<update id="edit" parameterType="cn.joey.entity.StockIn">
+		update stock_in set status = #{status} where id = #{id}
+	</update>
+	<!-- 采购单信息搜索查询 -->
+	<select id="findList" parameterType="Map" resultMap="stockInResultMap">
+		select 
+		s.id as s_id,s.money as s_money,s.productNum as s_productNum,s.payType as s_payType,s.status as s_status,s.operator as s_operator,s.remark as s_remark,s.createTime as s_createTime,s.purchaseInId as s_purchaseInId,
+		sd.id as sd_id,sd.stockInId as sd_stockInId,sd.money as sd_money,sd.productName as sd_productName,sd.price as sd_price,sd.productNum as sd_productNum,sd.pid as sd_pid  
+		from stock_in s,stock_in_detail sd 
+		where s.id = sd.stockInId 
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%' 
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+		<if test="offset != null and pageSize != null">
+			limit #{offset},#{pageSize}
+		</if>
+	</select>
+	<!-- 模糊搜索总条数 -->
+	<select id="getTotal" parameterType="Map" resultType="Integer">
+		select count(*) from stock_in where 1=1  
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%'
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+	</select>
+	<!-- 删除采购单信息 -->
+	<delete id="delete" parameterType="String">
+		delete from stock_in where id = #{value}
+	</delete>
+</mapper>

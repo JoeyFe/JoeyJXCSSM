@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.joey.dao.DeliverOutDao">
+<resultMap id="deliverOutResultMap" type="cn.joey.entity.DeliverOut">
+		<id column="d_id" property="id" />
+		<result column="d_money" property="money" />
+		<result column="d_productNum" property="productNum" />
+		<result column="d_payType" property="payType" />
+		<result column="d_status" property="status" />
+		<result column="d_operator" property="operator" />
+		<result column="d_remark" property="remark" />
+		<result column="d_createTime" property="createTime" />
+		<result column="d_sellOutId" property="sellOutId" />
+		<result column="d_customId" property="customId" />
+		<result column="d_customPhone" property="customPhone" />
+		<result column="d_customAddr" property="customAddr" />
+		<collection property="deliverOutDetailList" ofType="cn.joey.entity.DeliverOutDetail">
+			<id column="dd_id" property="id" />
+			<result column="dd_deliverOutId" property="deliverOutId" />
+			<result column="dd_productName" property="productName" />
+			<result column="dd_price" property="price" />
+			<result column="dd_productNum" property="productNum" />
+			<result column="dd_money" property="money" />
+			<result column="dd_pid" property="pid" />
+		</collection>
+	</resultMap>
+	<!-- 销售出库单插入操作 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="cn.joey.entity.DeliverOut">
+		insert into deliver_out(id,money,productNum,payType,status,operator,remark,createTime,sellOutId,customId,customPhone,customAddr) values(#{id},#{money},#{productNum},#{payType},#{status},#{operator},#{remark},#{createTime},#{sellOutId},#{customId},#{customPhone},#{customAddr})
+	</insert>
+	<!-- 销售出库单子项添加操作 -->
+	<insert id="addDetail" parameterType="cn.joey.entity.DeliverOutDetail">
+		insert into deliver_out_detail(id,deliverOutId,productName,price,productNum,money,pid) values(null,#{deliverOutId},#{productName},#{price},#{productNum},#{money},#{pid})
+	</insert>
+	<!-- 销售出库单编辑状态操作 -->
+	<update id="edit" parameterType="cn.joey.entity.DeliverOut">
+		update deliver_out set status = #{status} where id = #{id}
+	</update>
+	<!-- 销售出库单信息搜索查询 -->
+	<select id="findList" parameterType="Map" resultMap="deliverOutResultMap">
+		select 
+		d.id as d_id,d.money as d_money,d.productNum as d_productNum,d.payType as d_payType,d.status as d_status,d.operator as d_operator,d.remark as d_remark,d.createTime as d_createTime,d.sellOutId as d_sellOutId,d.customId as d_customId,d.customPhone as d_customPhone,d.customAddr as d_customAddr,
+		dd.id as dd_id,dd.deliverOutId as dd_deliverOutId,dd.money as dd_money,dd.productName as dd_productName,dd.price as dd_price,dd.productNum as dd_productNum,dd.pid as dd_pid  
+		from deliver_out d,deliver_out_detail dd 
+		where d.id = dd.deliverOutId 
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%' 
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+		<if test="offset != null and pageSize != null">
+			limit #{offset},#{pageSize}
+		</if>
+	</select>
+	<!-- 模糊搜索总条数 -->
+	<select id="getTotal" parameterType="Map" resultType="Integer">
+		select count(*) from deliver_out where 1=1  
+		<if test="payType != null">
+			and payType = #{payType}  
+		</if>
+		<if test="status != null">
+			and status = #{status}  
+		</if>
+		<if test="operator != null">
+			and operator like '%${operator}%'
+		</if>
+		<if test="minMoney != null">
+			and money &gt;= #{minMoney} 
+		</if>
+		<if test="maxMoney != null">
+			and money &lt;= #{maxMoney} 
+		</if>
+	</select>
+	<!-- 删除销售出库单信息 -->
+	<delete id="delete" parameterType="String">
+		delete from deliver_out where id = #{value}
+	</delete>
+</mapper>
